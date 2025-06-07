@@ -1,6 +1,9 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Book, Briefcase, Settings, LogIn } from 'lucide-react';
+import { Home, User, Book, Briefcase, Settings, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,16 +11,51 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
+  const { user, logout, isAuthenticated } = useAuth();
   
-  const navItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/about', label: 'About', icon: User },
-    { path: '/services', label: 'Services', icon: Settings },
-    { path: '/learning', label: 'Learning', icon: Book },
-    { path: '/jobs', label: 'Jobs', icon: Briefcase },
-    { path: '/profile', label: 'Profile', icon: User },
-    { path: '/login', label: 'Login', icon: LogIn },
-  ];
+  // Define navigation items based on user role
+  const getNavItems = () => {
+    const baseItems = [
+      { path: '/', label: 'Home', icon: Home },
+      { path: '/about', label: 'About', icon: User },
+      { path: '/services', label: 'Services', icon: Settings },
+    ];
+
+    if (!isAuthenticated) {
+      return [
+        ...baseItems,
+        { path: '/learning', label: 'Learning', icon: Book },
+        { path: '/jobs', label: 'Jobs', icon: Briefcase },
+        { path: '/login', label: 'Login', icon: LogIn },
+      ];
+    }
+
+    // Role-based navigation
+    if (user?.role === 'caregiver') {
+      return [
+        ...baseItems,
+        { path: '/learning', label: 'Learning', icon: Book },
+        { path: '/jobs', label: 'Jobs', icon: Briefcase },
+        { path: '/profile', label: 'Profile', icon: User },
+      ];
+    } else if (user?.role === 'careseeker') {
+      return [
+        ...baseItems,
+        { path: '/profile', label: 'Profile', icon: User },
+      ];
+    } else if (user?.role === 'admin') {
+      return [
+        ...baseItems,
+        { path: '/learning', label: 'Learning', icon: Book },
+        { path: '/jobs', label: 'Jobs', icon: Briefcase },
+        { path: '/profile', label: 'Admin Dashboard', icon: User },
+      ];
+    }
+
+    return baseItems;
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -53,7 +91,29 @@ const Layout = ({ children }: LayoutProps) => {
                   </Link>
                 );
               })}
+              
+              {isAuthenticated && (
+                <Button
+                  onClick={logout}
+                  variant="ghost"
+                  className="flex items-center space-x-2 px-4 py-2 text-muted-foreground hover:text-primary"
+                >
+                  <LogOut size={18} />
+                  <span className="font-medium">Logout</span>
+                </Button>
+              )}
             </div>
+
+            {/* User Info */}
+            {isAuthenticated && (
+              <div className="hidden md:flex items-center space-x-2 text-sm">
+                <span className="text-muted-foreground">Welcome,</span>
+                <span className="font-medium">{user?.name}</span>
+                <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full capitalize">
+                  {user?.role}
+                </span>
+              </div>
+            )}
 
             {/* Mobile Navigation Toggle */}
             <div className="md:hidden">
@@ -91,6 +151,16 @@ const Layout = ({ children }: LayoutProps) => {
                 </Link>
               );
             })}
+            
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200"
+              >
+                <LogOut size={18} />
+                <span className="font-medium text-sm">Logout</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

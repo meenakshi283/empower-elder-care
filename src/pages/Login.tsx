@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, signup } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const [loginForm, setLoginForm] = useState({
@@ -35,26 +37,42 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Login Successful",
-        description: `Welcome back! You're logged in as a ${loginForm.role}.`,
-      });
+    try {
+      const success = await login(loginForm);
       
-      // Redirect based on role
-      switch (loginForm.role) {
-        case 'admin':
-          navigate('/profile');
-          break;
-        case 'caregiver':
-          navigate('/jobs');
-          break;
-        default:
-          navigate('/profile');
+      if (success) {
+        toast({
+          title: "Login Successful",
+          description: `Welcome back! You're logged in as a ${loginForm.role}.`,
+        });
+        
+        // Redirect based on role
+        switch (loginForm.role) {
+          case 'admin':
+            navigate('/profile');
+            break;
+          case 'caregiver':
+            navigate('/jobs');
+            break;
+          default:
+            navigate('/profile');
+        }
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid credentials. Please check your username, password, and role.",
+          variant: "destructive"
+        });
       }
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "An error occurred during login. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -70,15 +88,31 @@ const Login = () => {
 
     setIsLoading(true);
     
-    // Simulate signup
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const success = await signup(signupForm);
+      
+      if (success) {
+        toast({
+          title: "Account Created",
+          description: `Welcome to Shatam! Your ${signupForm.role} account has been created.`,
+        });
+        navigate('/profile');
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: "An error occurred during registration. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Account Created",
-        description: `Welcome to Shatam! Your ${signupForm.role} account has been created.`,
+        title: "Signup Error",
+        description: "An error occurred during registration. Please try again.",
+        variant: "destructive"
       });
-      navigate('/profile');
-    }, 1500);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,6 +130,18 @@ const Login = () => {
             Sign in to your account or create a new one
           </p>
         </div>
+
+        {/* Demo Credentials */}
+        <Card className="mb-6 bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold text-blue-800 mb-3">Demo Credentials</h3>
+            <div className="text-sm text-blue-700 space-y-1">
+              <p><strong>Admin:</strong> admin / admin123</p>
+              <p><strong>Caregiver:</strong> caregiver / care123</p>
+              <p><strong>Careseeker:</strong> careseeker / seek123</p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="shadow-xl animate-scale-in">
           <CardHeader>
