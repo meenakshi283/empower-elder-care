@@ -1,17 +1,16 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../contexts/AuthContext';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 const Profile = () => {
   const { user, isAuthenticated } = useAuth();
 
   if (!isAuthenticated || !user) {
-    return <Redirect to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   // Admin Dashboard
